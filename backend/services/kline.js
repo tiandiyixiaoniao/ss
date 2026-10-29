@@ -29,13 +29,24 @@ class KLIne {
             volume,
             amount,
         });
+    }
 
+    async addMany(klines) {
+        return await db.kline.bulkCreate(klines);
     }
 
     async listBycode(code, codes, startTS, endTS) {
         endTS = endTS ? endTS : dayjs().value();
         startTS = startTS ? startTS : dayjs().subtract(1, 'day').value();
-
+        return await db.kline.findAll({
+            where: {
+                code,
+                time: {
+                    [db.Op.between]: [startTS, endTS],
+                },
+            },
+            order: [['time', 'DESC']],
+        });
     }
 
 }
