@@ -16,7 +16,7 @@ const dayjs = require('dayjs');
 */
 
 
-class KLIne {
+module.exports = class KlineService {
     async create(code, time, open, high, low, close, volume, amount) {
         // 创建kline数据
         return await db.kline.create({

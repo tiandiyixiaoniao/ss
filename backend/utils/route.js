@@ -36,7 +36,16 @@ function joinPath(prefix, base, uri) {
     if (!uri || uri === '/') return basePath;
     return basePath + (uri.startsWith('/') ? uri : `/${uri}`);
 }
-
+/**
+* 路由定义接口。
+* @typedef {Object} RouteDef
+    interface def {
+        method: 'get' | 'post' | 'put' | 'delete';
+        uri: string;
+        handler: (ctx: any) => any;
+        params?: (data: any) => void;
+    }
+    */
 function doHandler(def) {
     return async (ctx) => {
         try {
