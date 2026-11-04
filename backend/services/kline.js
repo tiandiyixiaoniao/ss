@@ -1,52 +1,26 @@
-
-const dayjs = require('dayjs');
-
+const db = require('@/db/db');
 
 /**
- * 数据表字段定义 - kline
- * {
- * time: 时间戳,
- * open: 开盘价,
- * high: 最高价,
- * low: 最低价,
- * close: 收盘价,
- * volume: 成交量,
- * amount: 成交额,
- * }
-*/
-
-
+ * 数据表字段 - kline
+ * { code, time, open, high, low, close, volume, amount }
+ */
 module.exports = class KlineService {
     async create(code, time, open, high, low, close, volume, amount) {
-        // 创建kline数据
-        return await db.kline.create({
-            code,
-            time,
-            open,
-            high,
-            low,
-            close,
-            volume,
-            amount,
-        });
+        const [row] = await db('kline')
+            .insert({ code, time, open, high, low, close, volume, amount })
+            .returning('*');
+        return row;
     }
 
     async addMany(klines) {
-        return await db.kline.bulkCreate(klines);
+        if (!klines || klines.length === 0) return [];
+        return db('kline').insert(klines).returning('*');
     }
 
-    async listBycode(code, codes, startTS, endTS) {
-        endTS = endTS ? endTS : dayjs().value();
-        startTS = startTS ? startTS : dayjs().subtract(1, 'day').value();
-        return await db.kline.findAll({
-            where: {
-                code,
-                time: {
-                    [db.Op.between]: [startTS, endTS],
-                },
-            },
-            order: [['time', 'DESC']],
-        });
+    async listBycode(code, startTS, endTS) {
+        const q = db('kline').where('code', code);
+        if (startTS) q.andWhere('time', '>=', startTS);
+        if (endTS) q.andWhere('time', '<=', endTS);
+        return q.orderBy('time', 'desc');
     }
-
 }

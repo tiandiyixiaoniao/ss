@@ -1,27 +1,19 @@
+require('module-alias/register');
 const Koa = require('koa');
-const Router = require('@koa/router');
-const db = require('./db');
+const bodyParser = require('koa-bodyparser');
+const { errorHandle } = require('@/middleware/error');
+const { createApiRouter } = require('@/utils/route');
+const config = require('@/config');
+const logger = require('@/utils/logger');
+
 const app = new Koa();
-const router = new Router();
-const { errorHandle } = require('./middleware/error')
+app.use(errorHandle);
+app.use(bodyParser());
 
-app.use(require('koa-bodyparser')());
+const router = createApiRouter({ dir: 'routes/kline', prefix: '/dataApi' });
+app.use(router.routes());
+app.use(router.allowedMethods());
 
-app.use(errorHandle)
-
-router.post('/kine', async (ctx) => {
-  console.log(11, ctx.request.body);
-  const { name, email } = ctx.request.body || {};
-  if (!name) ctx.throw(400, 'name required');
-  const { rows } = await db.query(
-    'INSERT INTO users (name, email) VALUES ($1, $2) RETURNING *',
-    [name, email || null]
-  );
-  ctx.body = rows[0];
+app.listen(config.port, () => {
+  logger.info('kline api started on port: %d ', config.port);
 });
-
-
-app.use(router.routes()).use(router.allowedMethods());
-
-const PORT = process.env.PORT || 3002;
-app.listen(PORT, () => console.log(`http://localhost:${PORT}`));

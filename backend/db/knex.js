@@ -1,17 +1,15 @@
-module.exports = {
-    development: {
-        client: 'pg',
-        connection: {
-            host: '127.0.0.1',      // 数据库地址
-            port: 5432,             // 端口
-            user: 'your_database_user',
-            password: 'your_database_password',
-            database: 'your_database_name'
-        },
-        pool: { min: 2, max: 10 }, // 连接池配置
-        migrations: {
-            tableName: 'knex_migrations',
-            directory: './migrations' // 迁移文件存放目录   
-        }
-    }
-};
+const knex = require('knex');
+
+// knex 实例：pg 连接池由 knex 内部管理，兼容原 PG* 环境变量
+const db = knex({
+    client: 'pg',
+    connection: {
+        host: process.env.PGHOST || 'localhost',
+        port: process.env.PGPORT || 5432,
+        database: process.env.PGDATABASE || 'postgres',
+        user: process.env.PGUSER || 'postgres',
+        password: process.env.PGPASSWORD || 'postgres',
+    },
+});
+
+module.exports = db;

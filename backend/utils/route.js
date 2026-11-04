@@ -4,7 +4,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const Router = require('@koa/router');
-const { runValidator } = require('@/utils/validate');
 const logger = require('@/utils/logger');
 
 function createApiRouter({ dir, prefix }) {
@@ -15,9 +14,11 @@ function createApiRouter({ dir, prefix }) {
         const base = path.basename(file, path.extname(file));
         const defs = require(file).RouteDefs;
         for (const def of defs) {
-            router.register(joinPath(prefix, base, def.uri), [def.method.toUpperCase()], doHandler(def));
+            let url = joinPath(prefix, base, def.uri);
+            router.register(url, [def.method.toUpperCase()], doHandler(def));
+            logger.info(`route: ${def.method.toUpperCase()} ${url}`);
         }
-        logger.debug({ file, count: defs.length }, 'routes loaded');
+
     }
 
     return router;
@@ -40,7 +41,7 @@ function joinPath(prefix, base, uri) {
 * 路由定义接口。
 * @typedef {Object} RouteDef
     interface def {
-        method: 'get' | 'post' | 'put' | 'delete';
+        method: 'get' | 'post' 
         uri: string;
         handler: (ctx: any) => any;
         params?: (data: any) => void;
@@ -49,14 +50,11 @@ function joinPath(prefix, base, uri) {
 function doHandler(def) {
     return async (ctx) => {
         try {
-            if (def.validator) {
-                const data = def.method === 'get' ? ctx.request.query : ctx.request.body;
-                runValidator(def.validator, data);
-            }
             ctx.body = await def.handler(ctx);
         } catch (err) {
+            console.log(err)
             ctx.status = 500;
-            ctx.body = { message: err.message };
+            ctx.body = { code: err.code || 1, message: err.message || 'Internal Server Error' };``
         }
     };
 }
